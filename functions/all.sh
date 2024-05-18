@@ -1,7 +1,12 @@
 #!/bin/bash
 appleChip=$(uname -m)
-if [ appleChip != "Linux" ]; then
-    PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
+if [ $(uname) != "Linux" ]; then
+    system="darwin"
+    if [ $appleChip = 'arm64' ]; then
+        PATH="/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
+    else
+        PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+    fi
 fi
 
 if [[ "$EMUDECKGIT" == "" ]]; then
@@ -21,8 +26,8 @@ fi
 
 if [ "$system" != "darwin" ]; then
     export PATH="${EMUDECKGIT}/tools/binaries/:$PATH"
+    chmod +x "${EMUDECKGIT}/tools/binaries/xmlstarlet"
 fi
-chmod +x "${EMUDECKGIT}/tools/binaries/xmlstarlet"
 
 source "$EMUDECKGIT"/functions/checkBIOS.sh
 source "$EMUDECKGIT"/functions/checkInstalledEmus.sh
@@ -101,19 +106,9 @@ source "$EMUDECKGIT"/functions/RemotePlayClientScripts/remotePlayMoonlight.sh
 source "$EMUDECKGIT"/functions/RemotePlayClientScripts/remotePlayGreenlight.sh
 source "$EMUDECKGIT"/functions/cloudSyncHealth.sh
 
-#Soon
-#source "$EMUDECKGIT"/EmuScripts/emuDeckRedream.sh
-#source "$EMUDECKGIT"/EmuScripts/emuDeckMAMEProton.sh
 
 # Darwin overrides
-
 if [ "$system" = "darwin" ]; then
+    source "$EMUDECKGIT/darwin/functions/varsOverrides.sh"
 	source "$EMUDECKGIT/darwin/functions/all.sh"
-    source "$EMUDECKGIT/darwin/functions/helperFunctions.sh"
-    source "$EMUDECKGIT/darwin/functions/overrides.sh"
-	source "$EMUDECKGIT/darwin/api.sh"
 fi
-
-# Android
-
-#source "$EMUDECKGIT/android/functions/all.sh"
