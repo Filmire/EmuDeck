@@ -1,23 +1,27 @@
 #!/bin/bash
 generateGameLists() {
-
     pegasus_setPaths
-
     python $HOME/.config/EmuDeck/backend/tools/generate_game_lists.py "$romsPath"
-    #generateGameLists_artwork &> /dev/null &
 }
 
 generateGameListsJson() {
-    cat $HOME/emudeck/roms_games.json
-    generateGameLists_artwork &> /dev/null &
+    local userid=$1
+    python $HOME/.config/EmuDeck/backend/tools/generate_game_lists.py "$romsPath"
+    cat $HOME/emudeck/cache/roms_games.json
+    generateGameLists_artwork $userid &> /dev/null &
 }
 
 generateGameLists_artwork() {
-    json=$(cat "$HOME/emudeck/roms_games.json")
-    platforms=$(echo "$json" | jq -r '.[].id')
+    mkdir -p "$HOME/emudeck/cache/"
+    local userid=$1
+    local json=$(cat "$HOME/emudeck/cache/roms_games.json")
+    local platforms=$(echo "$json" | jq -r '.[].id')
 
-    accountfolder=$(ls -d $HOME/.steam/steam/userdata/* | head -n 1)
-    dest_folder="$accountfolder/config/grid/"
+    accountfolder=$(ls -td $HOME/.steam/steam/userdata/* | head -n 1)
+    #accountfolder="$HOME/.steam/steam/userdata/$userid"
+
+
+    dest_folder="$accountfolder/config/grid/emudeck/"
     mkdir -p "$dest_folder"
 
     declare -A processed_games
@@ -35,7 +39,9 @@ generateGameLists_artwork() {
            if ! ls $file_to_check 1> /dev/null 2>&1 && [ -z "${processed_games[$game]}" ]; then
                 echo -ne "$game"
 
-                response=$(curl -s -G "https://bot.emudeck.com/steamdbimg.php?name=$game&platform=$platform")
+                fuzzygame=$(python $HOME/.config/EmuDeck/backend/tools/fuzzy_search_rom.py "$game")
+
+                response=$(curl -s -G "https://bot.emudeck.com/steamdbimg.php?name=$fuzzygame&platform=$platform")
                 game_name=$(echo "$response" | jq -r '.name')
                 game_img_url=$(echo "$response" | jq -r '.img')
                 filename=$(basename "$game_img_url")
